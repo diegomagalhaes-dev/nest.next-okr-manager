@@ -5,8 +5,20 @@ services:
   app:
     build: .
     entrypoint: ./.docker/entrypoint.sh
-    container_name: ork.manager-backend
+    container_name: okr-manager_backend
     ports:
       - 3000:3000
     volumes:
       - .:/home/node/app
+
+  db:
+    build: .docker/postgres
+    restart: always
+    tty: true
+    ports:
+      - 3422:5432
+    volumes:
+      - .docker/dbdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=okr-manager_db
