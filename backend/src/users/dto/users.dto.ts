@@ -3,3 +3,10 @@ export class CreateUserDto {
   email: string;
   password: string;
 }
+
+export class UsersDto {
+  user: {
+    id: string;
+    email: string;
+  };
+}
