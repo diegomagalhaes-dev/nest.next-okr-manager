@@ -17,7 +17,7 @@ interface Response {
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) {}
 
   async login({ email, password }: Request): Promise<Response> {
     const userRepository = getRepository(User);
@@ -42,7 +42,7 @@ export class AuthService {
     }
 
     const payload = {
-      subject: user.id,
+      sub: user.id,
       email: user.email,
     };
 
