@@ -1,49 +1,56 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { getRepository } from 'typeorm';
+import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 
-const users = [
-  {
-    id: 1,
-    username: 'user1@user.com',
-    password: '$2b$10$EecWnvyBtN4ttSJWILAjs.lnOfVejB7ABCxWGLS0OUCEcbcnwTu5K', //123456
-    role: 'admin',
-  },
-  {
-    id: 2,
-    username: 'user2@user.com',
-    password: '$2b$10$EecWnvyBtN4ttSJWILAjs.lnOfVejB7ABCxWGLS0OUCEcbcnwTu5K',
-    role: 'user',
-  },
-  {
-    id: 3,
-    username: 'user3@user.com',
-    password: '$2b$10$EecWnvyBtN4ttSJWILAjs.lnOfVejB7ABCxWGLS0OUCEcbcnwTu5K',
-    role: 'user',
-  },
-];
+import User from 'src/models/user.entity';
+
+interface Request {
+  email: string;
+  password: string;
+}
+
+interface Response {
+  user: User;
+  token: string;
+}
 
 @Injectable()
 export class AuthService {
   constructor(private jwtService: JwtService) {}
 
-  login(username: string, password: string): string {
-    const user = this.validateCredentials(username, password);
+  async login({ email, password }: Request): Promise<Response> {
+    const userRepository = getRepository(User);
+    const user = await userRepository.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new HttpException(
+        'Email or password is incorrect!',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    const passwordMatched = await compare(password, user.password);
+
+    if (!passwordMatched) {
+      throw new HttpException(
+        'Email or password is incorrect!',
+        HttpStatus.FORBIDDEN,
+      );
+    }
 
     const payload = {
-      sub: user.id,
-      username: user.username,
+      subject: user.id,
+      email: user.email,
     };
 
-    return this.jwtService.sign(payload);
-  }
+    const token = this.jwtService.sign(payload);
 
-  validateCredentials(username: string, password: string) {
-    const user = users.find(
-      (u) =>
-        u.username === username && bcrypt.compareSync(password, u.password),
-    );
-
-    return user;
+    return {
+      user,
+      token,
+    };
   }
 }
