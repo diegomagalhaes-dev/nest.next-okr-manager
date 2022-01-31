@@ -16,7 +16,7 @@ services:
     restart: always
     tty: true
     ports:
-      - 3422:5432
+      - 3254:5432
     volumes:
       - .docker/dbdata:/var/lib/postgresql/data
     environment:
